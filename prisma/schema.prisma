@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskStatus {
+  TODO
+  DOING
+  DONE
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  title       String
+  description String
+  isFavorite  Boolean    @default(false)
+  status      TaskStatus @default(TODO)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime?  @updatedAt @map("updated_at")
+
+  comments    Comment[]
+  attachments Attachment[]
+
+  @@map("tasks")
+}
+
+model Comment {
+  id      String @id @default(uuid())
+  content String
+  taskId  String @map("task_id")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  task        Task         @relation(fields: [taskId], references: [id])
+  attachments Attachment[]
+
+  @@map("comments")
+}
+
+model Attachment {
+  id        String  @id @default(uuid())
+  title     String
+  path      String
+  taskId    String? @map("task_id")
+  commentId String? @map("comment_id")
+
+  task    Task?    @relation(fields: [taskId], references: [id])
+  comment Comment? @relation(fields: [commentId], references: [id])
+
+  @@map("attachments")
+}
